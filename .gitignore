@@ -44,5 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Android local SDK path (auto-generated)
+/android/local.properties
+
 # Environment variables
 .env
