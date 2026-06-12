@@ -79,20 +79,20 @@ class _PlayerScreenState extends State<PlayerScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.tv, color: Colors.white54, size: 80),
-          const SizedBox(height: 24),
+          const Icon(Icons.tv, color: Colors.white54, size: 100),
+          const SizedBox(height: 32),
           const Text(
             'Reproductor disponible solo en Android TV',
-            style: TextStyle(color: Colors.white70, fontSize: 18),
+            style: TextStyle(color: Colors.white70, fontSize: 22),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
             widget.video.name,
-            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+            style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 40),
           ElevatedButton.icon(
             onPressed: _openInBrowser,
             icon: const Icon(Icons.open_in_browser),
@@ -100,15 +100,15 @@ class _PlayerScreenState extends State<PlayerScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFE50914),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
             ),
           ),
-          const SizedBox(height: 16),
-          TextButton(
+            const SizedBox(height: 20),
+            TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text(
               'Volver al catálogo',
-              style: TextStyle(color: Colors.white54, fontSize: 16),
+              style: TextStyle(color: Colors.white54, fontSize: 20),
             ),
           ),
         ],
@@ -132,7 +132,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
           SizedBox(height: 16),
           Text(
             'Preparando video...',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
+            style: TextStyle(color: Colors.white70, fontSize: 20),
           ),
         ],
       ),
@@ -163,7 +163,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       right: 0,
       child: Container(
         color: Colors.black.withAlpha(180),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -176,7 +176,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 backgroundColor: Colors.white10,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Row(
               children: [
                 _ControlButton(
@@ -191,15 +191,15 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     });
                   },
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 24),
                 Text(
                   _formatDuration(_controller!.value.position),
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
                 ),
                 const Spacer(),
                 Text(
                   _formatDuration(_controller!.value.duration),
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  style: const TextStyle(color: Colors.white70, fontSize: 18),
                 ),
               ],
             ),
@@ -250,9 +250,9 @@ class _ControlButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Focus(
       child: IconButton(
-        icon: Icon(icon, color: Colors.white, size: 32),
+        icon: Icon(icon, color: Colors.white, size: 40),
         onPressed: onPressed,
-        splashRadius: 24,
+        splashRadius: 28,
       ),
     );
   }

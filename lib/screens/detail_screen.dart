@@ -21,9 +21,9 @@ class DetailScreen extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 48),
                       _buildThumbnail(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 32),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 48),
                         child: Text(
@@ -31,24 +31,24 @@ class DetailScreen extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 28,
+                            fontSize: 38,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                       if (video.duration != null) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         Text(
                           'Duración: ${video.duration}',
                           style: const TextStyle(
                             color: Colors.white70,
-                            fontSize: 16,
+                            fontSize: 20,
                           ),
                         ),
                       ],
                       const SizedBox(height: 32),
                       _PlayButton(onPressed: () => _play(context)),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 48),
                     ],
                   ),
                 ),
@@ -66,8 +66,8 @@ class DetailScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: CachedNetworkImage(
           imageUrl: video.thumbnailUrl!,
-          width: 400,
-          height: 250,
+          width: 520,
+          height: 320,
           fit: BoxFit.cover,
           placeholder: (_, __) => _buildPlaceholder(),
           errorWidget: (_, __, ___) => _buildPlaceholder(),
@@ -79,8 +79,8 @@ class DetailScreen extends StatelessWidget {
 
   Widget _buildPlaceholder() {
     return Container(
-      width: 400,
-      height: 250,
+      width: 520,
+      height: 320,
       decoration: BoxDecoration(
         color: Colors.grey.shade800,
         borderRadius: BorderRadius.circular(12),
@@ -107,12 +107,12 @@ class _PlayButton extends StatelessWidget {
     return Focus(
       child: ElevatedButton.icon(
         onPressed: onPressed,
-        icon: const Icon(Icons.play_arrow, size: 32),
-        label: const Text('Reproducir', style: TextStyle(fontSize: 20)),
+        icon: const Icon(Icons.play_arrow, size: 40),
+        label: const Text('Reproducir', style: TextStyle(fontSize: 26)),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFE50914),
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 56, vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),

@@ -19,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final FocusNode _heroFocus = FocusNode();
   final FocusNode _profileFocus = FocusNode();
   final FocusNode _playButtonFocus = FocusNode();
+  final FocusNode _moreInfoFocus = FocusNode();
   List<Category> _categories = [];
   List<List<FocusNode>> _videoFocusGrid = [];
   List<ScrollController> _hScrollControllers = [];
@@ -81,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _heroFocus.dispose();
     _profileFocus.dispose();
     _playButtonFocus.dispose();
+    _moreInfoFocus.dispose();
     _verticalScrollController.dispose();
     for (final row in _videoFocusGrid) {
       for (final node in row) {
@@ -120,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(height: 16),
             Text(
               'Cargando catálogo...',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+              style: TextStyle(color: Colors.white70, fontSize: 22),
             ),
           ],
         ),
@@ -132,9 +134,9 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, color: Colors.red, size: 64),
+            const Icon(Icons.error_outline, color: Colors.red, size: 80),
             const SizedBox(height: 16),
-            Text(_error!, style: const TextStyle(color: Colors.white, fontSize: 18)),
+            Text(_error!, style: const TextStyle(color: Colors.white, fontSize: 24)),
             const SizedBox(height: 24),
             _RetryButton(onRetry: _loadCatalog),
           ],
@@ -246,21 +248,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTopBar() {
     return Padding(
-      padding: const EdgeInsets.only(left: 40, right: 40),
+      padding: const EdgeInsets.only(left: 48, right: 48),
       child: Row(
         children: [
           Image.asset(
             'assets/logo.png',
-            height: 96,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(width: 16),
-          Image.network(
-            'https://res.cloudinary.com/dqgd5r847/image/upload/v1781198321/logo_cauce_blanco_completo_kgcj3s.png',
-            height: 60,
+            height: 120,
             fit: BoxFit.contain,
           ),
           const Spacer(),
+          Image.network(
+            'https://res.cloudinary.com/dqgd5r847/image/upload/v1781198321/logo_cauce_blanco_completo_kgcj3s.png',
+            height: 72,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(width: 24),
           _ProfileButton(
             expanded: _showProfilePanel,
             focusNode: _profileFocus,
@@ -322,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
           top: 0,
           left: 0,
           right: 0,
-          height: 125,
+          height: 160,
           child: IgnorePointer(
             child: Container(
               decoration: const BoxDecoration(
@@ -363,8 +365,8 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _buildHeroVideoBackground(video),
           Positioned(
-            left: 48,
-            right: 48,
+            left: 56,
+            right: 56,
             bottom: 0,
             top: 0,
             child: Column(
@@ -372,25 +374,25 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 56),
+                  padding: const EdgeInsets.only(bottom: 72),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        constraints: const BoxConstraints(maxWidth: 600),
+                        constraints: const BoxConstraints(maxWidth: 800),
                         child: Text(
                           video.name,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 36,
+                            fontSize: 48,
                             fontWeight: FontWeight.bold,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 28),
                       Row(
                         children: [
                           _HeroActionButton(
@@ -400,14 +402,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             icon: Icons.play_arrow,
                             label: 'Reproducir',
                             primary: true,
+                            onRight: () => _moreInfoFocus.requestFocus(),
                             isFirst: true,
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 20),
                           _HeroActionButton(
+                            focusNode: _moreInfoFocus,
                             onPressed: () {},
                             icon: Icons.info_outline,
                             label: 'Más información',
                             primary: false,
+                            onLeft: () => _playButtonFocus.requestFocus(),
                             isLast: true,
                           ),
                         ],
@@ -429,7 +434,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return CachedNetworkImage(
         imageUrl: thumb,
         width: double.infinity,
-        height: 500,
+      height: 600,
         fit: BoxFit.cover,
         errorWidget: (_, __, ___) => _buildHeroFallback(),
       );
@@ -472,8 +477,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Material(
           color: Colors.transparent,
           child: Container(
-            width: 380,
-            constraints: const BoxConstraints(maxHeight: 400),
+            width: 480,
+            constraints: const BoxConstraints(maxHeight: 520),
             decoration: BoxDecoration(
               color: const Color(0xFF141414),
               borderRadius: BorderRadius.circular(12),
@@ -494,64 +499,64 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
                       child: const Row(
                         children: [
                           CircleAvatar(
                             backgroundColor: Color(0xFFE50914),
-                            radius: 22,
+                            radius: 28,
                             child: Text('A',
                                 style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 22,
+                                    fontSize: 28,
                                     fontWeight: FontWeight.bold)),
                           ),
-                          SizedBox(width: 14),
+                          SizedBox(width: 16),
                           Expanded(
                             child: Text('Artes para la Paz',
                                 style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 20,
+                                    fontSize: 24,
                                     fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
                     ),
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(horizontal: 24),
                       child: Divider(color: Colors.white12),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
-                      child: Text(
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(24, 12, 24, 0),
+                      child: const Text(
                         'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
                         'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. '
                         'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris '
                         'nisi ut aliquip ex ea commodo consequat.',
-                        style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.6),
+                        style: TextStyle(color: Colors.white70, fontSize: 16, height: 1.6),
                       ),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
-                      child: Text(
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
+                      child: const Text(
                         'Duis aute irure dolor in reprehenderit in voluptate velit esse '
                         'cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat '
                         'cupidatat non proident, sunt in culpa qui officia deserunt mollit '
                         'anim id est laborum.',
-                        style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.6),
+                        style: TextStyle(color: Colors.white70, fontSize: 16, height: 1.6),
                       ),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
-                      child: Text(
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
+                      child: const Text(
                         'Sed ut perspiciatis unde omnis iste natus error sit voluptatem '
                         'accusantium doloremque laudantium, totam rem aperiam, eaque ipsa '
                         'quae ab illo inventore veritatis et quasi architecto beatae vitae '
                         'dicta sunt explicabo.',
-                        style: TextStyle(color: Colors.white54, fontSize: 13, height: 1.6),
+                        style: TextStyle(color: Colors.white54, fontSize: 15, height: 1.6),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -560,7 +565,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: const Text('Cerrar',
                               style: TextStyle(
                                   color: Color(0xFFE50914),
-                                  fontSize: 15,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.w600)),
                         ),
                       ),
@@ -583,6 +588,8 @@ class _HeroActionButton extends StatefulWidget {
   final bool primary;
   final FocusNode? focusNode;
   final bool autofocus;
+  final VoidCallback? onLeft;
+  final VoidCallback? onRight;
   final bool isFirst;
   final bool isLast;
 
@@ -593,6 +600,8 @@ class _HeroActionButton extends StatefulWidget {
     required this.primary,
     this.focusNode,
     this.autofocus = false,
+    this.onLeft,
+    this.onRight,
     this.isFirst = false,
     this.isLast = false,
   });
@@ -612,14 +621,20 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
       onFocusChange: (focused) => setState(() => _isFocused = focused),
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            if (widget.onLeft != null) {
+              widget.onLeft!();
+            }
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            if (widget.onRight != null) {
+              widget.onRight!();
+            }
+            return KeyEventResult.handled;
+          }
           if (event.logicalKey == LogicalKeyboardKey.enter) {
             widget.onPressed();
-            return KeyEventResult.handled;
-          }
-          if (widget.isFirst && event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-            return KeyEventResult.handled;
-          }
-          if (widget.isLast && event.logicalKey == LogicalKeyboardKey.arrowRight) {
             return KeyEventResult.handled;
           }
         }
@@ -629,7 +644,7 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
         onTap: widget.onPressed,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
           decoration: BoxDecoration(
             color: widget.primary
                 ? Colors.white
@@ -653,12 +668,12 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(widget.icon,
-                  size: 24,
+                  size: 32,
                   color: widget.primary ? Colors.black : Colors.white),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text(widget.label,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 24,
                     fontWeight: FontWeight.w600,
                     color: widget.primary ? Colors.black : Colors.white,
                   )),
@@ -694,13 +709,18 @@ class _ProfileButtonState extends State<_ProfileButton> {
   Widget build(BuildContext context) {
     return Focus(
       focusNode: widget.focusNode,
-      onFocusChange: (focused) => setState(() => _isFocused = focused),
+      onFocusChange: (focused) {
+        setState(() => _isFocused = focused);
+        if (!focused && widget.expanded) {
+          widget.onPressed();
+        }
+      },
       onKeyEvent: (node, event) {
+        if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
+            event.logicalKey == LogicalKeyboardKey.arrowRight) {
+          return KeyEventResult.handled;
+        }
         if (event is KeyDownEvent) {
-          if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
-              event.logicalKey == LogicalKeyboardKey.arrowRight) {
-            return KeyEventResult.handled;
-          }
           if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
             widget.onDownPressed?.call();
             return KeyEventResult.handled;
@@ -715,8 +735,8 @@ class _ProfileButtonState extends State<_ProfileButton> {
       child: GestureDetector(
         onTap: widget.onPressed,
         child: Container(
-          width: 48,
-          height: 48,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
             color: const Color(0xFFE50914),
             shape: BoxShape.circle,
@@ -738,13 +758,13 @@ class _ProfileButtonState extends State<_ProfileButton> {
                 const Text('A',
                     style: TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                         height: 1)),
                 Icon(
                   widget.expanded ? Icons.expand_less : Icons.expand_more,
                   color: Colors.white70,
-                  size: 14,
+                  size: 18,
                 ),
               ],
             ),
@@ -766,10 +786,10 @@ class _RetryButton extends StatelessWidget {
       onPressed: onRetry,
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFFE50914),
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
       ),
       child: const Text('Reintentar',
-          style: TextStyle(color: Colors.white, fontSize: 16)),
+          style: TextStyle(color: Colors.white, fontSize: 20)),
     );
   }
 }

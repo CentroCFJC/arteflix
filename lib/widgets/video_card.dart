@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/video_item.dart';
 
@@ -11,8 +11,8 @@ class VideoCard extends StatelessWidget {
   const VideoCard({
     super.key,
     required this.video,
-    this.width = 320,
-    this.height = 200,
+    this.width = 420,
+    this.height = 260,
     this.isFocused = false,
   });
 
@@ -21,7 +21,7 @@ class VideoCard extends StatelessWidget {
     return Container(
       width: width,
       height: height,
-      margin: const EdgeInsets.symmetric(horizontal: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         border: isFocused
@@ -30,8 +30,8 @@ class VideoCard extends StatelessWidget {
         boxShadow: isFocused
             ? [BoxShadow(
                 color: Colors.white.withAlpha(80),
-                blurRadius: 12,
-                spreadRadius: 2,
+                blurRadius: 18,
+                spreadRadius: 4,
               )]
             : [],
       ),
@@ -47,13 +47,13 @@ class VideoCard extends StatelessWidget {
                 left: 0,
                 right: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   color: Colors.black.withAlpha(180),
                   child: Text(
                     video.name,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 13,
+                      fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
@@ -83,7 +83,7 @@ class VideoCard extends StatelessWidget {
     return Container(
       color: Colors.grey.shade800,
       child: const Center(
-        child: Icon(Icons.movie_outlined, color: Colors.grey, size: 40),
+        child: Icon(Icons.movie_outlined, color: Colors.grey, size: 56),
       ),
     );
   }
