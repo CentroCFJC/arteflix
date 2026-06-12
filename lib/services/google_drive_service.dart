@@ -113,7 +113,7 @@ class GoogleDriveService {
       final imageName = '$baseName.$ext';
       final searchUrl = '${AppConfig.driveBaseUrl}/files'
           '?q=name=%27$imageName%27'
-          '+and=%27$folderId%27+in+parents'
+          '+and+%27$folderId%27+in+parents'
           '+and+trashed=false'
           '&key=${AppConfig.driveApiKey}'
           '&fields=files(id)';
