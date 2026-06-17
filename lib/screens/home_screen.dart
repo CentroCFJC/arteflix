@@ -620,17 +620,19 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
       autofocus: widget.autofocus,
       onFocusChange: (focused) => setState(() => _isFocused = focused),
       onKeyEvent: (node, event) {
+        if (widget.onRight == null && event.logicalKey == LogicalKeyboardKey.arrowRight) {
+          return KeyEventResult.handled;
+        }
+        if (widget.onLeft == null && event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+          return KeyEventResult.handled;
+        }
         if (event is KeyDownEvent) {
           if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-            if (widget.onLeft != null) {
-              widget.onLeft!();
-            }
+            widget.onLeft!();
             return KeyEventResult.handled;
           }
           if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-            if (widget.onRight != null) {
-              widget.onRight!();
-            }
+            widget.onRight!();
             return KeyEventResult.handled;
           }
           if (event.logicalKey == LogicalKeyboardKey.enter) {
@@ -646,18 +648,24 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
           decoration: BoxDecoration(
-            color: widget.primary
-                ? Colors.white
-                : Colors.white.withAlpha(40),
+            color: _isFocused
+                ? (widget.primary
+                    ? const Color(0xFFE50914)
+                    : const Color(0xFF1976D2))
+                : (widget.primary
+                    ? Colors.white
+                    : const Color(0x2AFFFFFF)),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: _isFocused ? const Color(0xFFE50914) : Colors.transparent,
+              color: _isFocused ? Colors.white : Colors.transparent,
               width: 3,
             ),
             boxShadow: _isFocused
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFE50914).withAlpha(120),
+                      color: widget.primary
+                          ? const Color(0xFFE50914).withAlpha(120)
+                          : const Color(0xFF1976D2).withAlpha(120),
                       blurRadius: 16,
                       spreadRadius: 2,
                     ),
@@ -669,13 +677,13 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
             children: [
               Icon(widget.icon,
                   size: 32,
-                  color: widget.primary ? Colors.black : Colors.white),
+                  color: _isFocused ? Colors.white : (widget.primary ? Colors.black : Colors.white)),
               const SizedBox(width: 12),
               Text(widget.label,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
-                    color: widget.primary ? Colors.black : Colors.white,
+                    color: _isFocused ? Colors.white : (widget.primary ? Colors.black : Colors.white),
                   )),
             ],
           ),
