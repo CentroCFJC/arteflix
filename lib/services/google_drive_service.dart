@@ -63,7 +63,7 @@ class GoogleDriveService {
         '+and+mimeType+contains+%27video%27'
         '+and+trashed=false'
         '&key=${AppConfig.driveApiKey}'
-        '&fields=files(id,name,mimeType,thumbnailLink,size,videoMediaMetadata)';
+        '&fields=files(id,name,videoMediaMetadata)';
 
     try {
       final response = await _client.get(Uri.parse(url));

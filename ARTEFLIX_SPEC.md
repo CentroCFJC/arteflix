@@ -1,206 +1,267 @@
-# Arteflix
+# Arteflix — Especificación Técnica y Funcional
 
 ## Descripción General
 
 Arteflix es una aplicación para Android TV inspirada en la experiencia de navegación de Netflix, diseñada para la Sala Interactiva Cauce del Centro de Ciencias Francisco José de Caldas.
 
-La aplicación permitirá explorar y reproducir videos educativos organizados por categorías. Todo el contenido será administrado mediante una carpeta pública de Google Drive, de manera que el personal encargado únicamente deba crear carpetas y cargar archivos multimedia sin necesidad de conocimientos técnicos.
+La aplicación permite explorar y reproducir videos educativos organizados por categorías. Todo el contenido se administra mediante una carpeta pública de Google Drive, de manera que el personal encargado únicamente debe crear carpetas y cargar archivos multimedia sin necesidad de conocimientos técnicos.
 
-La aplicación se ejecutará localmente en un televisor Android TV específico y no requiere publicación en tiendas de aplicaciones ni autenticación de usuarios.
+La aplicación se ejecuta localmente en un televisor Android TV y no requiere publicación en tiendas de aplicaciones ni autenticación de usuarios.
 
 ## Objetivos
 
-* Permitir la exploración intuitiva de contenido audiovisual mediante control remoto.
-* Facilitar la administración de contenido por personal no técnico.
-* Actualizar automáticamente el catálogo a partir de Google Drive.
-* Ofrecer una interfaz moderna inspirada en plataformas de streaming.
-* Mantener una arquitectura simple, robusta y de bajo mantenimiento.
+- Permitir la exploración intuitiva de contenido audiovisual mediante control remoto.
+- Facilitar la administración de contenido por personal no técnico.
+- Actualizar automáticamente el catálogo a partir de Google Drive al iniciar la app.
+- Ofrecer una interfaz moderna inspirada en plataformas de streaming.
+- Mantener una arquitectura simple, robusta y de bajo mantenimiento.
 
-## Tecnologías Seleccionadas
+## Tecnologías Implementadas
 
 ### Framework
-
-Flutter
+Flutter (Dart SDK ^3.6.2)
 
 ### Plataforma Objetivo
-
-Android TV
+Android TV (API 21+). Soporte secundario en Windows (fallback con "abrir en navegador").
 
 ### Fuente de Contenido
-
-Google Drive público
+Google Drive API v3 con API Key pública (sin OAuth).
 
 ### Reproductor Multimedia
+`video_player` para Flutter, basado en ExoPlayer en Android.
 
-Video Player para Flutter (basado en ExoPlayer en Android)
+### Miniaturas
+`cached_network_image` con caché local en disco mediante `flutter_cache_manager`.
 
-### Persistencia Local
+### Variables de Entorno
+`flutter_dotenv` — carga `DRIVE_API_KEY` y `DRIVE_FOLDER_ID` desde archivo `.env`.
 
-Solo caché temporal para mejorar rendimiento.
+### API HTTP
+`http` — cliente HTTP para llamadas a la API de Google Drive.
 
-No se implementarán:
+### Fallback Desktop
+`url_launcher` — abre el video en el navegador cuando no se ejecuta en Android.
 
-* Usuarios
-* Autenticación
-* Favoritos
-* Historial
-* Continuar viendo
-* Base de datos local
-* Sincronización de perfiles
+### Navegación
+Nativa del framework: widgets `Focus`, `FocusNode` y `LogicalKeyboardKey` para manejo de control remoto. Sin librerías externas.
 
-## Estructura del Contenido
+### Gestión de Estado
+`StatefulWidget` con `setState`. Sin librerías externas (Provider, BLoC, Riverpod, etc.).
 
-La carpeta raíz de Google Drive contendrá categorías representadas mediante subcarpetas.
+## Exclusión Deliberada
 
-Ejemplo:
+No se implementan:
 
-Arteflix/
+- Usuarios ni autenticación
+- Favoritos
+- Historial
+- Continuar viendo
+- Base de datos local
+- Sincronización de perfiles
+- Reproducción en segundo plano
+- Listas de reproducción
+- Búsqueda
+- Streaming adaptativo (HLS/DASH)
 
+## Estructura del Contenido en Google Drive
+
+La carpeta raíz de Google Drive contiene categorías representadas mediante subcarpetas:
+
+```
+Carpeta raíz
 ├── Astronomía/
-
 │   ├── Agujeros Negros.mp4
-
-│   ├── Agujeros Negros.jpg
-
-│   ├── Sistema Solar.mp4
-
-│
-
+│   ├── Agujeros Negros.jpg        (miniatura — opcional)
+│   └── Sistema Solar.mp4
 ├── Robótica/
-
 │   ├── Introducción a Arduino.mp4
+│   └── Impresión 3D.mp4
+└── ...
+```
 
-│   ├── Impresión 3D.mp4
-
-│
-
-├── Biodiversidad/
-
-│   ├── Bosques Andinos.mp4
-
-│   ├── Polinizadores.mp4
-
-Cada carpeta representa una categoría visible dentro de la aplicación.
-
-Cada archivo de video representa un elemento reproducible.
+- Cada subcarpeta es una categoría.
+- Cada archivo `.mp4` es un video reproducible.
+- Archivos `.jpg` o `.png` con el mismo nombre base del video se usan como miniatura oficial.
+- Las categorías se ordenan por `modifiedTime` descendente (más reciente primero).
 
 ## Gestión de Miniaturas
 
-Las miniaturas se resolverán utilizando la siguiente prioridad:
-
 ### Prioridad 1
-
-Buscar una imagen con el mismo nombre del video.
-
-Ejemplo:
-
-Agujeros Negros.mp4
-
-Agujeros Negros.jpg
-
-Si existe la imagen, esta será utilizada como miniatura oficial.
+Buscar una imagen con el mismo nombre del video (`.jpg` primero, luego `.png`) dentro de la misma carpeta. Si existe, se usa como miniatura oficial.
 
 ### Prioridad 2
-
-Si no existe una imagen asociada, utilizar la miniatura generada automáticamente por Google Drive.
+Si no existe imagen asociada, se consulta la API de Drive para obtener el `thumbnailLink` generado automáticamente.
 
 ### Prioridad 3
-
-Si Google Drive no proporciona miniatura, mostrar una imagen genérica de respaldo definida por la aplicación.
+Si no hay miniatura disponible, se muestra un icono genérico (`Icons.movie_outlined`) sobre fondo gris.
 
 ## Navegación
 
-La aplicación debe ser completamente navegable mediante control remoto Android TV.
+La aplicación es completamente navegable mediante control remoto Android TV.
 
-Controles esperados:
+### Controles soportados
 
-* Arriba
-* Abajo
-* Izquierda
-* Derecha
-* OK / Enter
-* Back
+| Tecla | Acción |
+|---|---|
+| Arriba / Abajo | Moverse entre categorías o entre secciones (banner, perfil, carrusel) |
+| Izquierda / Derecha | Navegar entre videos del mismo carrusel / entre botones del banner |
+| Enter / OK | Seleccionar video / reproducir / abrir panel |
+| Back | Retroceder: cerrar panel de perfil → deseleccionar video → salir de la app |
 
-No se requiere interacción táctil.
+No se requiere interacción táctil. La experiencia se basa completamente en navegación por foco (Focus Navigation).
 
-La experiencia debe priorizar la navegación por foco (Focus Navigation).
+### Flujo de navegación
 
-## Interfaz Principal
+```
+[Logo Arteflix]  [Logo Cauce]  [Perfil]
 
-La pantalla principal mostrará:
+[Banner hero]
+  └─ Cuando hay video seleccionado:
+       [Título del video]
+       [▶ Reproducir]  [ℹ Más información]
 
-* Logo de Arteflix
-* Categorías obtenidas desde Google Drive
-* Carruseles horizontales de contenido
-* Elemento seleccionado destacado visualmente
+[Categoría 1]
+  [Video] [Video] [Video] → (scroll horizontal)
 
-Diseño inspirado en Netflix:
+[Categoría 2]
+  [Video] [Video] [Video] → (scroll horizontal)
+```
 
-Categoría
+## Interfaz de Usuario
 
-[Video] [Video] [Video] [Video]
+### Pantalla Principal (`HomeScreen`)
 
-Categoría
+Elementos visibles:
 
-[Video] [Video] [Video] [Video]
+1. **Barra superior**: logo de Arteflix (izquierda), logo de Cauce (centro), botón de perfil (derecha).
+2. **Banner hero**: si no hay video seleccionado, muestra una imagen de cabecera estática (`cabecera.png`). Si hay un video seleccionado, muestra su miniatura de fondo con el título, botón "Reproducir" (rojo) y botón "Más información" (azul).
+3. **Carruseles de categorías**: filas horizontales con tarjetas de video. Cada fila tiene gradientes en los bordes que aparecen/desaparecen según la posición del scroll.
+4. **Panel de perfil**: al hacer foco en el botón de perfil y presionar Enter, se despliega un panel con información del espacio cultural. Se cierra con Back o Enter nuevamente.
 
-## Pantalla de Detalle
+### Tarjeta de Video (`VideoCard`)
 
-Al seleccionar un contenido se mostrará:
+- Dimensiones: 420×260 px.
+- Al recibir foco: borde blanco brillante (3 px) + sombra exterior.
+- Nombre del video en la parte inferior con fondo semitransparente.
+- **Efecto marquee**: si el nombre del video excede el ancho disponible, al recibir foco el texto se desplaza horizontalmente en un bucle continuo.
 
-* Miniatura
-* Nombre del video
-* Duración
-* Botón de reproducción
+### Reproductor de Video (`PlayerScreen`)
 
-No se requiere descripción textual obligatoria.
+- Pantalla completa, orientación forzada a landscape.
+- Al iniciar: reproducción automática.
+- Controles superpuestos en la parte inferior:
+  - Botón play/pausa.
+  - Barra de progreso (seeking permitido).
+  - Tiempo transcurrido / duración total.
+- Al tocar la pantalla (o con mando) se muestran/ocultan los controles.
+- Al finalizar la reproducción: regreso automático al catálogo tras 500 ms.
+- En Windows: muestra mensaje "Reproductor disponible solo en Android TV" con botón para abrir el video en el navegador.
 
-## Reproducción
+## Arquitectura del Código
 
-Al iniciar un video:
+```
+lib/
+├── main.dart                        # Entry point
+├── config/
+│   └── constants.dart               # AppConfig con credenciales
+├── models/
+│   ├── category.dart                # Category {id, name, videos, modifiedTime}
+│   └── video_item.dart              # VideoItem {id, name, videoUrl, thumbnailUrl, duration}
+├── screens/
+│   ├── home_screen.dart             # Catálogo principal (~803 líneas)
+│   └── player_screen.dart           # Reproductor de video (~259 líneas)
+├── services/
+│   └── google_drive_service.dart    # Cliente Google Drive API v3 (~165 líneas)
+└── widgets/
+    ├── category_row.dart            # Fila horizontal con scroll y gradientes (~309 líneas)
+    └── video_card.dart              # Tarjeta con foco, miniatura y marquee (~196 líneas)
+```
 
-* Reproducción en pantalla completa
-* Controles básicos del reproductor
-* Compatibilidad con MP4
+### Flujo de datos
 
-Al finalizar:
-
-* Regresar automáticamente al catálogo principal
+```
+Inicio App
+  → dotenv carga .env
+  → HomeScreen.initState()
+    → GoogleDriveService.fetchCatalog()
+      → _listFolderNames()          (GET /files?q=...folder)
+      → por cada carpeta:
+          _listVideosInFolder()      (GET /files?q=...video)
+          _resolveThumbnail()        (GET /files?q=...jpg|png  o  GET /files/{id}?fields=thumbnailLink)
+    → setState() con categorías
+  → Usuario navega y selecciona video
+    → PlayerScreen(video)
+      → VideoPlayerController.networkUrl()
+      → reproduce hasta completar
+      → Navigator.pop() automático
+```
 
 ## Sincronización
 
 Al iniciar la aplicación:
 
-1. Consultar Google Drive.
-2. Leer categorías.
-3. Leer videos.
-4. Resolver miniaturas.
-5. Construir catálogo.
+1. Cargar variables de entorno (`.env`).
+2. Consultar Google Drive para obtener lista de subcarpetas (categorías).
+3. Por cada carpeta, consultar archivos de video (`.mp4`).
+4. Resolver miniaturas para cada video.
+5. Construir y mostrar el catálogo en memoria.
 
-Opcionalmente se podrá implementar actualización automática periódica.
+No hay actualización automática periódica. Para refrescar el catálogo, se debe reiniciar la aplicación.
 
 ## Identidad Visual
 
-La identidad visual estará basada en el logo oficial de Arteflix entregado en formato PNG.
+- **Fondo**: negro (#000000).
+- **Acento principal**: rojo Netflix (#E50914).
+- **Acento secundario**: azul (#1976D2) para botón "Más información".
+- **Texto**: blanco y variantes de blanco semitransparente.
+- **Material 3** habilitado.
+- **Logo Arteflix**: asset `assets/logo.png`.
+- **Imagen de cabecera**: asset `assets/cabecera.png`.
+- **Logo Cauce**: desde Cloudinary (URL remota).
 
-La interfaz debe transmitir una estética moderna, limpia y cercana a plataformas de streaming comerciales.
+## Comandos de Desarrollo
 
-## Consideraciones de Mantenimiento
+```sh
+flutter pub get             # Instalar dependencias
+flutter run                 # Ejecutar en dispositivo/emulador
+flutter build apk --release # Generar APK para Android TV
+flutter analyze             # Análisis estático (linter)
+flutter test                # Ejecutar tests
+```
 
-El personal administrador únicamente deberá:
+## Dependencias (pubspec.yaml)
 
-1. Crear carpetas para nuevas categorías.
-2. Subir videos.
-3. Subir imágenes JPG opcionales con el mismo nombre del video.
+### Producción
+| Paquete | Propósito |
+|---|---|
+| `http` | Cliente HTTP para Google Drive API |
+| `video_player` | Reproducción de video (ExoPlayer) |
+| `url_launcher` | Abrir videos en navegador (fallback desktop) |
+| `cached_network_image` | Miniaturas con caché |
+| `flutter_dotenv` | Variables de entorno desde `.env` |
 
-No deberá modificar archivos JSON, configuraciones ni estructuras técnicas.
+### Desarrollo
+| Paquete | Propósito |
+|---|---|
+| `flutter_test` | Framework de tests |
+| `flutter_lints` | Reglas de linting |
+
+## Mantenimiento
+
+El personal administrador únicamente debe:
+
+1. Crear carpetas en Google Drive para nuevas categorías.
+2. Subir videos `.mp4`.
+3. Subir imágenes `.jpg`/`.png` opcionales con el mismo nombre del video.
+
+No requiere modificar archivos JSON, configuraciones técnicas ni código fuente.
 
 ## Requisitos No Funcionales
 
-* Inicio rápido.
-* Navegación fluida mediante control remoto.
-* Interfaz optimizada para televisores.
-* Bajo consumo de recursos.
-* Funcionamiento estable en sesiones prolongadas.
-* Arquitectura modular y mantenible.
-* Código preparado para futuras ampliaciones.
+- Inicio rápido (carga única del catálogo desde Drive).
+- Navegación fluida mediante control remoto (focus navigation nativa).
+- Interfaz optimizada para televisores (tipografía grande, alto contraste).
+- Bajo consumo de recursos (sin estado persistente, sin librerías pesadas).
+- Funcionamiento estable en sesiones prolongadas.
+- Arquitectura modular y mantenible (separación clara en modelos, servicios, screens, widgets).
+- Código preparado para futuras ampliaciones (agregar nuevas pantallas o servicios sin reescribir).

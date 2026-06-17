@@ -11,9 +11,6 @@ class AppConfig {
   static const String driveBaseUrl = 'https://www.googleapis.com/drive/v3';
   static const String driveDownloadUrl = 'https://www.googleapis.com/drive/v3/files';
 
-  static const String placeholderImage = 'assets/placeholder.png';
-
-  static const Duration cacheDuration = Duration(hours: 1);
 
   static String _get(String key) {
     final value = dotenv.env[key];
