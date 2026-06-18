@@ -247,19 +247,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTopBar() {
+    final sh = MediaQuery.of(context).size.height;
     return Padding(
       padding: const EdgeInsets.only(left: 48, right: 48),
       child: Row(
         children: [
           Image.asset(
             'assets/logo.png',
-            height: 120,
+            height: sh * 0.09,
             fit: BoxFit.contain,
           ),
           const Spacer(),
           Image.network(
             'https://res.cloudinary.com/dqgd5r847/image/upload/v1781198321/logo_cauce_blanco_completo_kgcj3s.png',
-            height: 72,
+            height: sh * 0.06,
             fit: BoxFit.contain,
           ),
           const SizedBox(width: 24),
@@ -317,6 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       heroContent = _buildHeroDefault();
     }
+    final sh = MediaQuery.of(context).size.height;
     return Stack(
       children: [
         heroContent,
@@ -324,7 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
           top: 0,
           left: 0,
           right: 0,
-          height: 160,
+          height: sh * 0.12,
           child: IgnorePointer(
             child: Container(
               decoration: const BoxDecoration(
@@ -345,9 +347,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeroDefault() {
+    final sh = MediaQuery.of(context).size.height;
     return Container(
       width: double.infinity,
-      height: 500,
+      height: sh * 0.38,
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: AssetImage('assets/cabecera.png'),
@@ -358,12 +361,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeroVideo() {
+    final sh = MediaQuery.of(context).size.height;
     final video = _selectedVideo!;
     return SizedBox(
-      height: 500,
+      height: sh * 0.38,
       child: Stack(
         children: [
-          _buildHeroVideoBackground(video),
+          _buildHeroVideoBackground(video, sh),
           Positioned(
             left: 56,
             right: 56,
@@ -374,7 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 72),
+                  padding: EdgeInsets.only(bottom: sh * 0.055),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -383,16 +387,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         constraints: const BoxConstraints(maxWidth: 800),
                         child: Text(
                           video.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 48,
+                            fontSize: sh * 0.038,
                             fontWeight: FontWeight.bold,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(height: 28),
+                      SizedBox(height: sh * 0.022),
                       Row(
                         children: [
                           _HeroActionButton(
@@ -428,13 +432,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeroVideoBackground(VideoItem video) {
+  Widget _buildHeroVideoBackground(VideoItem video, double sh) {
     final thumb = video.thumbnailUrl;
     if (thumb != null) {
       return CachedNetworkImage(
         imageUrl: thumb,
         width: double.infinity,
-      height: 600,
+      height: sh * 0.38,
         fit: BoxFit.cover,
         errorWidget: (_, __, ___) => _buildHeroFallback(),
       );
@@ -443,9 +447,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeroFallback() {
+    final sh = MediaQuery.of(context).size.height;
     return Container(
       width: double.infinity,
-      height: 500,
+      height: sh * 0.38,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF1A1A1A), Colors.black],
@@ -457,9 +462,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProfilePanel() {
+    final sh = MediaQuery.of(context).size.height;
     return Positioned(
-      top: 88,
-      right: 40,
+      top: sh * 0.07,
+      right: sh * 0.03,
       child: Focus(
         onKeyEvent: (node, event) {
           if (event is KeyDownEvent &&
@@ -477,8 +483,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Material(
           color: Colors.transparent,
           child: Container(
-            width: 480,
-            constraints: const BoxConstraints(maxHeight: 520),
+            width: MediaQuery.of(context).size.width * 0.28,
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.55),
             decoration: BoxDecoration(
               color: const Color(0xFF141414),
               borderRadius: BorderRadius.circular(12),
@@ -635,7 +641,8 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
             widget.onRight!();
             return KeyEventResult.handled;
           }
-          if (event.logicalKey == LogicalKeyboardKey.enter) {
+          if (event.logicalKey == LogicalKeyboardKey.enter ||
+              event.logicalKey == LogicalKeyboardKey.select) {
             widget.onPressed();
             return KeyEventResult.handled;
           }
@@ -646,7 +653,7 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
         onTap: widget.onPressed,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.height * 0.028, vertical: MediaQuery.of(context).size.height * 0.013),
           decoration: BoxDecoration(
             color: _isFocused
                 ? (widget.primary
@@ -676,12 +683,12 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(widget.icon,
-                  size: 32,
+                  size: MediaQuery.of(context).size.height * 0.025,
                   color: _isFocused ? Colors.white : (widget.primary ? Colors.black : Colors.white)),
               const SizedBox(width: 12),
               Text(widget.label,
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: MediaQuery.of(context).size.height * 0.019,
                     fontWeight: FontWeight.w600,
                     color: _isFocused ? Colors.white : (widget.primary ? Colors.black : Colors.white),
                   )),
@@ -733,7 +740,8 @@ class _ProfileButtonState extends State<_ProfileButton> {
             widget.onDownPressed?.call();
             return KeyEventResult.handled;
           }
-          if (event.logicalKey == LogicalKeyboardKey.enter) {
+          if (event.logicalKey == LogicalKeyboardKey.enter ||
+              event.logicalKey == LogicalKeyboardKey.select) {
             widget.onPressed();
             return KeyEventResult.handled;
           }
@@ -742,9 +750,12 @@ class _ProfileButtonState extends State<_ProfileButton> {
       },
       child: GestureDetector(
         onTap: widget.onPressed,
-        child: Container(
-          width: 64,
-          height: 64,
+        child: Builder(builder: (ctx) {
+          final s = MediaQuery.of(ctx).size.height * 0.045;
+          final o = MediaQuery.of(ctx).size.height * 0.013;
+          return Container(
+          width: s * 1.6,
+          height: s * 1.6,
           decoration: BoxDecoration(
             color: const Color(0xFFE50914),
             shape: BoxShape.circle,
@@ -763,21 +774,22 @@ class _ProfileButtonState extends State<_ProfileButton> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('A',
+                Text('A',
                     style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: s * 0.55,
                         fontWeight: FontWeight.bold,
                         height: 1)),
                 Icon(
                   widget.expanded ? Icons.expand_less : Icons.expand_more,
                   color: Colors.white70,
-                  size: 18,
+                  size: o * 1.2,
                 ),
               ],
             ),
           ),
-        ),
+        );
+        }),
       ),
     );
   }

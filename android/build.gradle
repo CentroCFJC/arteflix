@@ -8,6 +8,13 @@ allprojects {
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
+    configurations.configureEach {
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'androidx.media3') {
+                details.useVersion '1.9.2'
+            }
+        }
+    }
 }
 subprojects {
     project.evaluationDependsOn(":app")

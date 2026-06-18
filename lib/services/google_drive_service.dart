@@ -79,7 +79,7 @@ class GoogleDriveService {
           if (!fileName.endsWith('.mp4')) continue;
 
           final thumbnailUrl = await _resolveThumbnail(fileId, fileName, folder['id']!);
-          final videoUrl = 'https://drive.google.com/uc?export=download&id=$fileId';
+          final videoUrl = '${AppConfig.driveDownloadUrl}/$fileId?alt=media&key=${AppConfig.driveApiKey}';
 
           final metadata = f['videoMediaMetadata'] as Map<String, dynamic>?;
           String? duration;

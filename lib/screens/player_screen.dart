@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import '../models/video_item.dart';
@@ -18,6 +20,18 @@ class _PlayerScreenState extends State<PlayerScreen> {
   VideoPlayerController? _controller;
   bool _initialized = false;
   bool _showControls = true;
+  int _retryCount = 0;
+  static const int _maxRetries = 3;
+  static const Duration _controlsAutoHide = Duration(seconds: 5);
+  Timer? _hideControlsTimer;
+
+  void _showControlsWithTimer() {
+    _hideControlsTimer?.cancel();
+    setState(() => _showControls = true);
+    _hideControlsTimer = Timer(_controlsAutoHide, () {
+      if (mounted) setState(() => _showControls = false);
+    });
+  }
 
   @override
   void initState() {
@@ -28,25 +42,49 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Future<void> _initAndroidPlayer() async {
-    try {
-      _controller = VideoPlayerController.networkUrl(Uri.parse(widget.video.videoUrl));
-      await _controller!.initialize();
-      _controller!.addListener(_onPlayerStateChanged);
-      if (!mounted) return;
-      setState(() => _initialized = true);
-      _controller!.play();
-    } catch (e) {
-      if (!mounted) return;
-      _showError('Error al cargar el video: $e');
+    while (_retryCount < _maxRetries) {
+      try {
+        debugPrint('[Arteflix] Intento ${_retryCount + 1}/$_maxRetries — Cargando: ${widget.video.videoUrl}');
+        final ctrl = VideoPlayerController.networkUrl(Uri.parse(widget.video.videoUrl));
+        _controller = ctrl;
+        await ctrl.initialize();
+        ctrl.addListener(_onPlayerStateChanged);
+        if (!mounted) return;
+        debugPrint('[Arteflix] Video inicializado correctamente');
+        setState(() => _initialized = true);
+        ctrl.play();
+        _showControlsWithTimer();
+        return;
+      } catch (e) {
+        debugPrint('[Arteflix] Error en intento ${_retryCount + 1}: $e');
+        _controller?.dispose();
+        _controller = null;
+        _retryCount++;
+        if (!mounted) return;
+        if (_retryCount < _maxRetries) {
+          final delay = Duration(seconds: _retryCount * 2);
+          debugPrint('[Arteflix] Reintentando en ${delay.inSeconds}s...');
+          await Future.delayed(delay);
+        } else {
+          debugPrint('[Arteflix] Todos los intentos fallaron');
+          _showError(
+            'No se pudo reproducir el video después de $_maxRetries intentos.\n\n'
+            'Esto puede deberse a un problema con el decoder de video del televisor '
+            'o la conexión a Google Drive.\n\n'
+            'Detalle: $e',
+          );
+        }
+      }
     }
   }
 
   void _onPlayerStateChanged() {
     if (!mounted) return;
     final c = _controller!;
-    if (c.value.position == c.value.duration &&
-        c.value.isPlaying == false &&
-        c.value.isInitialized) {
+    setState(() {});
+    if (c.value.isInitialized &&
+        c.value.position == c.value.duration &&
+        !c.value.isPlaying) {
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) Navigator.pop(context);
       });
@@ -55,9 +93,54 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   void dispose() {
+    _hideControlsTimer?.cancel();
     _controller?.removeListener(_onPlayerStateChanged);
     _controller?.dispose();
     super.dispose();
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent || !_initialized) return KeyEventResult.ignored;
+
+    if (event.logicalKey == LogicalKeyboardKey.mediaPlayPause ||
+        event.logicalKey == LogicalKeyboardKey.select) {
+      _showControlsWithTimer();
+      if (_controller!.value.isPlaying) {
+        _controller!.pause();
+      } else {
+        _controller!.play();
+      }
+      return KeyEventResult.handled;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      final pos = _controller!.value.position;
+      final newPos = Duration(milliseconds: (pos.inMilliseconds - 5000).clamp(0, _controller!.value.duration.inMilliseconds));
+      _controller!.seekTo(newPos);
+      _showControlsWithTimer();
+      return KeyEventResult.handled;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      final pos = _controller!.value.position;
+      final newPos = Duration(milliseconds: (pos.inMilliseconds + 5000).clamp(0, _controller!.value.duration.inMilliseconds));
+      _controller!.seekTo(newPos);
+      _showControlsWithTimer();
+      return KeyEventResult.handled;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.arrowUp ||
+        event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      if (!_showControls) _showControlsWithTimer();
+      return KeyEventResult.handled;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.mediaStop) {
+      Navigator.pop(context);
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
   }
 
   @override
@@ -65,7 +148,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (Platform.isAndroid) {
       return Scaffold(
         backgroundColor: Colors.black,
-        body: _initialized ? _buildPlayer() : _buildLoading(),
+        body: Focus(
+          autofocus: true,
+          onKeyEvent: _handleKeyEvent,
+          child: _initialized ? _buildPlayer() : _buildLoading(),
+        ),
       );
     }
     return Scaffold(
@@ -143,7 +230,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
     return Stack(
       children: [
         GestureDetector(
-          onTap: () => setState(() => _showControls = !_showControls),
+          onTap: () {
+            if (_showControls) {
+              _hideControlsTimer?.cancel();
+              setState(() => _showControls = false);
+            } else {
+              _showControlsWithTimer();
+            }
+          },
           child: Center(
             child: AspectRatio(
               aspectRatio: _controller!.value.aspectRatio,
@@ -182,13 +276,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 _ControlButton(
                   icon: _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
                   onPressed: () {
-                    setState(() {
-                      if (_controller!.value.isPlaying) {
-                        _controller!.pause();
-                      } else {
-                        _controller!.play();
-                      }
-                    });
+                    _showControlsWithTimer();
+                    if (_controller!.value.isPlaying) {
+                      _controller!.pause();
+                    } else {
+                      _controller!.play();
+                    }
                   },
                 ),
                 const SizedBox(width: 24),
@@ -219,6 +312,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
+  Future<void> _retry() async {
+    _retryCount = 0;
+    setState(() => _initialized = false);
+    _initAndroidPlayer();
+  }
+
   void _showError(String message) {
     showDialog(
       context: context,
@@ -230,9 +329,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
+              _retry();
+            },
+            child: const Text('Reintentar', style: TextStyle(color: Color(0xFFE50914))),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
               Navigator.pop(context);
             },
-            child: const Text('Volver', style: TextStyle(color: Color(0xFFE50914))),
+            child: const Text('Volver', style: TextStyle(color: Colors.white54)),
           ),
         ],
       ),

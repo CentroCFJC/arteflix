@@ -10,6 +10,7 @@ void main() async {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   runApp(const ArteflixApp());
 }
 
@@ -18,20 +19,23 @@ class ArteflixApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Arteflix',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.black,
-        colorScheme: ColorScheme.dark(
-          primary: const Color(0xFFE50914),
-          surface: Colors.black,
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+      child: MaterialApp(
+        title: 'Arteflix',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: Colors.black,
+          colorScheme: ColorScheme.dark(
+            primary: const Color(0xFFE50914),
+            surface: Colors.black,
+          ),
+          useMaterial3: true,
+          focusColor: Colors.white,
         ),
-        useMaterial3: true,
-        focusColor: Colors.white,
+        home: const HomeScreen(),
       ),
-      home: const HomeScreen(),
     );
   }
 }

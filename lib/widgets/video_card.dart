@@ -48,7 +48,7 @@ class _VideoCardState extends State<VideoCard> with SingleTickerProviderStateMix
     }
   }
 
-  static const _marqueeStyle = TextStyle(fontSize: 24, fontWeight: FontWeight.w500, color: Colors.white);
+  static const _marqueeStyle = TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white);
   static const _separator = '|';
   static const _gapSize = 16.0;
 
@@ -74,9 +74,12 @@ class _VideoCardState extends State<VideoCard> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = widget.width == 420 ? screenWidth * 0.22 : widget.width;
+    final effectiveHeight = effectiveWidth * (widget.height / widget.width);
     return Container(
-      width: widget.width,
-      height: widget.height,
+      width: effectiveWidth,
+      height: effectiveHeight,
       margin: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
@@ -97,15 +100,15 @@ class _VideoCardState extends State<VideoCard> with SingleTickerProviderStateMix
           fit: StackFit.expand,
           children: [
             _buildThumbnail(),
-            _buildOverlay(),
+            _buildOverlay(effectiveHeight),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildOverlay() {
-    final overlayHeight = widget.height * 0.25;
+  Widget _buildOverlay(double cardHeight) {
+    final overlayHeight = cardHeight * 0.25;
 
     return Positioned(
       bottom: 0,
@@ -120,7 +123,7 @@ class _VideoCardState extends State<VideoCard> with SingleTickerProviderStateMix
           builder: (context, constraints) {
             const textStyle = TextStyle(
               color: Colors.white,
-              fontSize: 24,
+              fontSize: 18,
               fontWeight: FontWeight.w500,
             );
 

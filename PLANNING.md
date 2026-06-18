@@ -55,6 +55,17 @@
 - [ ] Optimizar rendimiento con listas perezosas
 - [ ] Manejar errores de red más robustamente
 
+## Fase 8: Fix Decoder Amlogic (TCL Google TV) ✓
+
+- [x] Identificar causa raíz: `OMX.amlogic.avc.decoder.awesome2` falla con formato 1080x1080
+- [x] Implementar `MediaCodecSelector` personalizado que excluye decoder Amlogic problemático
+- [x] Habilitar `setEnableDecoderFallback(true)` en `DefaultRenderersFactory`
+- [x] Mantener `forceDisableAsynchronous()` para evitar crash secundario en `MediaCodec.stop()`
+- [x] Aplicar fix en `TextureVideoPlayer.java` y `PlatformViewVideoPlayer.java`
+- [x] Mejorar URL de descarga de Google Drive (API v3 con `alt=media` evita redirección >25MB)
+- [x] Agregar logging detallado en `player_screen.dart` para depuración
+- [x] Mejorar mensajes de error al usuario
+
 ## Arquitectura
 
 ```

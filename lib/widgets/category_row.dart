@@ -29,96 +29,64 @@ class CategoryRow extends StatefulWidget {
 }
 
 class _CategoryRowState extends State<CategoryRow> {
-  bool _hasHiddenLeft = false;
-  bool _hasHiddenRight = false;
 
-  @override
-  void initState() {
-    super.initState();
-    widget.scrollController?.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _updateGradients());
+  double _cardWidth(BuildContext context) {
+    return MediaQuery.of(context).size.width * 0.22;
   }
 
-  @override
-  void didUpdateWidget(CategoryRow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.scrollController != widget.scrollController) {
-      oldWidget.scrollController?.removeListener(_onScroll);
-      widget.scrollController?.addListener(_onScroll);
-      _updateGradients();
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.scrollController?.removeListener(_onScroll);
-    super.dispose();
-  }
-
-  void _onScroll() {
-    _updateGradients();
-  }
-
-  void _updateGradients() {
-    final ctrl = widget.scrollController;
-    if (ctrl != null && ctrl.hasClients) {
-      final hasLeft = ctrl.offset > 0;
-      final hasRight = ctrl.offset < ctrl.position.maxScrollExtent;
-      if (hasLeft != _hasHiddenLeft || hasRight != _hasHiddenRight) {
-        setState(() {
-          _hasHiddenLeft = hasLeft;
-          _hasHiddenRight = hasRight;
-        });
-      }
-    }
-  }
-
-  void _scrollToCenter(int index, ScrollController controller) {
-    if (!controller.hasClients) return;
-    const double itemWidth = 440;
-    const double paddingStart = 48;
+  void _scrollToCenter(int index, ScrollController controller, BuildContext context) {
+    if (!controller.hasClients || !controller.position.hasContentDimensions) return;
+    final double itemWidth = _cardWidth(context) + 20; // 20 is exactly the total horizontal margin in VideoCard (10 left + 10 right)
+    final double paddingStart = MediaQuery.of(context).size.width * 0.015;
     final double viewportWidth = controller.position.viewportDimension;
     if (viewportWidth <= 0) return;
-    final double itemCenter = paddingStart + (index + 0.5) * itemWidth;
-    final double targetOffset = itemCenter - viewportWidth / 2;
+    
+    final double itemCenter = paddingStart + (index * itemWidth) + (itemWidth / 2);
+    final double targetOffset = itemCenter - (viewportWidth / 2);
+    
     final double clampedOffset = targetOffset.clamp(
       0.0,
       controller.position.maxScrollExtent,
     );
+    
+    if ((clampedOffset - controller.offset).abs() < 1.0) return;
+    
     controller.animateTo(
       clampedOffset,
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeOutQuad,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final ctrl = widget.scrollController;
+    final sh = MediaQuery.of(context).size.height;
+    final cardH = _cardWidth(context) * (260 / 420) + 30;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(48, 20, 0, 16),
+          padding: EdgeInsets.fromLTRB(sh * 0.025, sh * 0.012, 0, sh * 0.008),
           child: Text(
             widget.category.name,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 32,
+              fontSize: sh * 0.026,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
         SizedBox(
-          height: 310,
+          height: cardH,
           child: Stack(
             children: [
               ListView(
                 controller: ctrl,
                 scrollDirection: Axis.horizontal,
                 clipBehavior: Clip.hardEdge,
-                padding: const EdgeInsets.symmetric(horizontal: 48),
+                padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.015),
                 children: widget.category.videos.asMap().entries.map((e) {
                   final video = e.value;
                   final index = e.key;
@@ -128,9 +96,6 @@ class _CategoryRowState extends State<CategoryRow> {
                     final prevNode = widget.videoFocusNodes![index - 1];
                     onLeft = () {
                       prevNode.requestFocus();
-                      if (ctrl != null) {
-                        _scrollToCenter(index - 1, ctrl);
-                      }
                     };
                   }
 
@@ -139,9 +104,6 @@ class _CategoryRowState extends State<CategoryRow> {
                     final nextNode = widget.videoFocusNodes![index + 1];
                     onRight = () {
                       nextNode.requestFocus();
-                      if (ctrl != null) {
-                        _scrollToCenter(index + 1, ctrl);
-                      }
                     };
                   }
 
@@ -153,6 +115,11 @@ class _CategoryRowState extends State<CategoryRow> {
                     focusNode: widget.videoFocusNodes != null && index < widget.videoFocusNodes!.length
                         ? widget.videoFocusNodes![index]
                         : null,
+                    onFocus: () {
+                      if (ctrl != null) {
+                        _scrollToCenter(index, ctrl, context);
+                      }
+                    },
                     onUp: widget.upCallbacks != null && index < widget.upCallbacks!.length
                         ? widget.upCallbacks![index]
                         : null,
@@ -171,23 +138,29 @@ class _CategoryRowState extends State<CategoryRow> {
                   left: 0,
                   top: 0,
                   bottom: 0,
-                  width: 100,
+                  width: MediaQuery.of(context).size.width * 0.04,
                   child: IgnorePointer(
-                    child: AnimatedOpacity(
-                      opacity: _hasHiddenLeft ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              Colors.black.withAlpha(230),
-                              Colors.transparent,
-                            ],
+                    child: ListenableBuilder(
+                      listenable: ctrl,
+                      builder: (context, _) {
+                        final show = ctrl.hasClients && ctrl.position.hasContentDimensions && ctrl.offset > 0;
+                        return AnimatedOpacity(
+                          opacity: show ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  Colors.black.withAlpha(230),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -195,23 +168,29 @@ class _CategoryRowState extends State<CategoryRow> {
                   right: 0,
                   top: 0,
                   bottom: 0,
-                  width: 100,
+                  width: MediaQuery.of(context).size.width * 0.04,
                   child: IgnorePointer(
-                    child: AnimatedOpacity(
-                      opacity: _hasHiddenRight ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.centerRight,
-                            end: Alignment.centerLeft,
-                            colors: [
-                              Colors.black.withAlpha(230),
-                              Colors.transparent,
-                            ],
+                    child: ListenableBuilder(
+                      listenable: ctrl,
+                      builder: (context, _) {
+                        final show = ctrl.hasClients && ctrl.position.hasContentDimensions && ctrl.offset < ctrl.position.maxScrollExtent;
+                        return AnimatedOpacity(
+                          opacity: show ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.centerRight,
+                                end: Alignment.centerLeft,
+                                colors: [
+                                  Colors.black.withAlpha(230),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -219,7 +198,7 @@ class _CategoryRowState extends State<CategoryRow> {
             ],
           ),
         ),
-        const SizedBox(height: 32),
+        SizedBox(height: MediaQuery.of(context).size.height * 0.015),
       ],
     );
   }
@@ -230,6 +209,7 @@ class _FocusableVideoCard extends StatefulWidget {
   final VoidCallback onSelected;
   final bool autofocus;
   final FocusNode? focusNode;
+  final VoidCallback? onFocus;
   final VoidCallback? onUp;
   final VoidCallback? onDown;
   final VoidCallback? onLeft;
@@ -243,6 +223,7 @@ class _FocusableVideoCard extends StatefulWidget {
     required this.onSelected,
     this.autofocus = false,
     this.focusNode,
+    this.onFocus,
     this.onUp,
     this.onDown,
     this.onLeft,
@@ -259,12 +240,29 @@ class _FocusableVideoCardState extends State<_FocusableVideoCard> {
   bool _isFocused = false;
 
   @override
+  void initState() {
+    super.initState();
+    _isFocused = widget.focusNode?.hasFocus ?? false;
+  }
+
+  @override
+  void didUpdateWidget(_FocusableVideoCard old) {
+    super.didUpdateWidget(old);
+    if (widget.focusNode != old.focusNode) {
+      _isFocused = widget.focusNode?.hasFocus ?? false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Focus(
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,
       onFocusChange: (focused) {
-        setState(() => _isFocused = focused);
+        if (mounted) setState(() => _isFocused = focused);
+        if (focused && widget.onFocus != null) {
+          widget.onFocus!();
+        }
       },
       onKeyEvent: (node, event) {
         if (widget.onRight == null && event.logicalKey == LogicalKeyboardKey.arrowRight) {
@@ -282,7 +280,8 @@ class _FocusableVideoCardState extends State<_FocusableVideoCard> {
             widget.onRight!();
             return KeyEventResult.handled;
           }
-          if (event.logicalKey == LogicalKeyboardKey.enter) {
+          if (event.logicalKey == LogicalKeyboardKey.enter ||
+              event.logicalKey == LogicalKeyboardKey.select) {
             widget.onSelected();
             return KeyEventResult.handled;
           }

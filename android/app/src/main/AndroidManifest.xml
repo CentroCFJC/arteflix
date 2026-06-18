@@ -15,10 +15,13 @@
         android:label="Arteflix"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:banner="@drawable/ic_launcher"
+        android:logo="@mipmap/ic_launcher"
+        android:banner="@drawable/tv_banner"
         android:isGame="false">
         <activity
             android:name=".MainActivity"
+            android:banner="@drawable/tv_banner"
+            android:logo="@mipmap/ic_launcher"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""
