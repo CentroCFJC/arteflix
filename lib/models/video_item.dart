@@ -4,6 +4,7 @@ class VideoItem {
   final String videoUrl;
   final String? thumbnailUrl;
   final String? duration;
+  final String? description;
 
   const VideoItem({
     required this.id,
@@ -11,5 +12,6 @@ class VideoItem {
     required this.videoUrl,
     this.thumbnailUrl,
     this.duration,
+    this.description,
   });
 }

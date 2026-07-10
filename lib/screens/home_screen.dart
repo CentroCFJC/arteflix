@@ -19,7 +19,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final FocusNode _heroFocus = FocusNode();
   final FocusNode _profileFocus = FocusNode();
   final FocusNode _playButtonFocus = FocusNode();
-  final FocusNode _moreInfoFocus = FocusNode();
   List<Category> _categories = [];
   List<List<FocusNode>> _videoFocusGrid = [];
   List<ScrollController> _hScrollControllers = [];
@@ -82,7 +81,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _heroFocus.dispose();
     _profileFocus.dispose();
     _playButtonFocus.dispose();
-    _moreInfoFocus.dispose();
     _verticalScrollController.dispose();
     for (final row in _videoFocusGrid) {
       for (final node in row) {
@@ -397,30 +395,29 @@ class _HomeScreenState extends State<HomeScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (video.description != null && video.description!.isNotEmpty) ...[
+                        SizedBox(height: sh * 0.012),
+                        Container(
+                          constraints: const BoxConstraints(maxWidth: 800),
+                          child: Text(
+                            video.description!,
+                            style: TextStyle(
+                              color: Colors.white.withAlpha(178),
+                              fontSize: sh * 0.022,
+                              height: 1.3,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                       SizedBox(height: sh * 0.022),
-                      Row(
-                        children: [
-                          _HeroActionButton(
-                            focusNode: _playButtonFocus,
-                            autofocus: true,
-                            onPressed: () => _playVideo(video),
-                            icon: Icons.play_arrow,
-                            label: 'Reproducir',
-                            primary: true,
-                            onRight: () => _moreInfoFocus.requestFocus(),
-                            isFirst: true,
-                          ),
-                          const SizedBox(width: 20),
-                          _HeroActionButton(
-                            focusNode: _moreInfoFocus,
-                            onPressed: () {},
-                            icon: Icons.info_outline,
-                            label: 'Más información',
-                            primary: false,
-                            onLeft: () => _playButtonFocus.requestFocus(),
-                            isLast: true,
-                          ),
-                        ],
+                      _HeroActionButton(
+                        focusNode: _playButtonFocus,
+                        autofocus: true,
+                        onPressed: () => _playVideo(video),
+                        icon: Icons.play_arrow,
+                        label: 'Reproducir',
                       ),
                     ],
                   ),
@@ -582,25 +579,15 @@ class _HeroActionButton extends StatefulWidget {
   final VoidCallback onPressed;
   final IconData icon;
   final String label;
-  final bool primary;
   final FocusNode? focusNode;
   final bool autofocus;
-  final VoidCallback? onLeft;
-  final VoidCallback? onRight;
-  final bool isFirst;
-  final bool isLast;
 
   const _HeroActionButton({
     required this.onPressed,
     required this.icon,
     required this.label,
-    required this.primary,
     this.focusNode,
     this.autofocus = false,
-    this.onLeft,
-    this.onRight,
-    this.isFirst = false,
-    this.isLast = false,
   });
 
   @override
@@ -617,26 +604,16 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
       autofocus: widget.autofocus,
       onFocusChange: (focused) => setState(() => _isFocused = focused),
       onKeyEvent: (node, event) {
-        if (widget.onRight == null && event.logicalKey == LogicalKeyboardKey.arrowRight) {
+        if (event is KeyDownEvent &&
+            (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
+                event.logicalKey == LogicalKeyboardKey.arrowRight)) {
           return KeyEventResult.handled;
         }
-        if (widget.onLeft == null && event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        if (event is KeyDownEvent &&
+            (event.logicalKey == LogicalKeyboardKey.enter ||
+                event.logicalKey == LogicalKeyboardKey.select)) {
+          widget.onPressed();
           return KeyEventResult.handled;
-        }
-        if (event is KeyDownEvent) {
-          if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-            widget.onLeft!();
-            return KeyEventResult.handled;
-          }
-          if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-            widget.onRight!();
-            return KeyEventResult.handled;
-          }
-          if (event.logicalKey == LogicalKeyboardKey.enter ||
-              event.logicalKey == LogicalKeyboardKey.select) {
-            widget.onPressed();
-            return KeyEventResult.handled;
-          }
         }
         return KeyEventResult.ignored;
       },
@@ -646,13 +623,7 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
           duration: const Duration(milliseconds: 150),
           padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.height * 0.028, vertical: MediaQuery.of(context).size.height * 0.013),
           decoration: BoxDecoration(
-            color: _isFocused
-                ? (widget.primary
-                    ? const Color(0xFFE50914)
-                    : const Color(0xFF1976D2))
-                : (widget.primary
-                    ? Colors.white
-                    : const Color(0x2AFFFFFF)),
+            color: _isFocused ? const Color(0xFFE50914) : Colors.white,
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
               color: _isFocused ? Colors.white : Colors.transparent,
@@ -661,9 +632,7 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
             boxShadow: _isFocused
                 ? [
                     BoxShadow(
-                      color: widget.primary
-                          ? const Color(0xFFE50914).withAlpha(120)
-                          : const Color(0xFF1976D2).withAlpha(120),
+                      color: const Color(0xFFE50914).withAlpha(120),
                       blurRadius: 16,
                       spreadRadius: 2,
                     ),
@@ -675,13 +644,13 @@ class _HeroActionButtonState extends State<_HeroActionButton> {
             children: [
               Icon(widget.icon,
                   size: MediaQuery.of(context).size.height * 0.025,
-                  color: _isFocused ? Colors.white : (widget.primary ? Colors.black : Colors.white)),
+                  color: _isFocused ? Colors.white : Colors.black),
               const SizedBox(width: 12),
               Text(widget.label,
                   style: TextStyle(
                     fontSize: MediaQuery.of(context).size.height * 0.019,
                     fontWeight: FontWeight.w600,
-                    color: _isFocused ? Colors.white : (widget.primary ? Colors.black : Colors.white),
+                    color: _isFocused ? Colors.white : Colors.black,
                   )),
             ],
           ),

@@ -72,6 +72,7 @@ Carpeta raíz
 ├── Astronomía/
 │   ├── Agujeros Negros.mp4
 │   ├── Agujeros Negros.jpg        (miniatura — opcional)
+│   ├── Agujeros Negros.txt        (descripción — opcional)
 │   └── Sistema Solar.mp4
 ├── Robótica/
 │   ├── Introducción a Arduino.mp4
@@ -82,6 +83,7 @@ Carpeta raíz
 - Cada subcarpeta es una categoría.
 - Cada archivo `.mp4` es un video reproducible.
 - Archivos `.jpg` o `.png` con el mismo nombre base del video se usan como miniatura oficial.
+- Archivos `.txt` con el mismo nombre base del video se usan como descripción del contenido y se muestran debajo del título en el banner hero.
 - Las categorías se ordenan por `modifiedTime` descendente (más reciente primero).
 
 ## Gestión de Miniaturas
@@ -94,6 +96,15 @@ Si no existe imagen asociada, se consulta la API de Drive para obtener el `thumb
 
 ### Prioridad 3
 Si no hay miniatura disponible, se muestra un icono genérico (`Icons.movie_outlined`) sobre fondo gris.
+
+## Gestión de Descripciones
+
+Durante el escaneo de cada carpeta, el sistema busca un archivo `.txt` cuyo nombre base coincida con el del video (por ejemplo, `Agujeros Negros.txt` para `Agujeros Negros.mp4`).
+
+- Si existe, se descarga y se lee completamente con codificación UTF-8.
+- El texto se asocia al modelo del video (`VideoItem.description`) y se mantiene en memoria.
+- Si no existe, la descripción es `null` y no se reserva espacio visual adicional.
+- Si existe pero no puede leerse, se registra el error en el log y se continúa sin descripción.
 
 ## Navegación
 
@@ -118,7 +129,8 @@ No se requiere interacción táctil. La experiencia se basa completamente en nav
 [Banner hero]
   └─ Cuando hay video seleccionado:
        [Título del video]
-       [▶ Reproducir]  [ℹ Más información]
+       [Descripción del video]   (solo si existe .txt asociado)
+       [▶ Reproducir]
 
 [Categoría 1]
   [Video] [Video] [Video] → (scroll horizontal)
@@ -134,7 +146,7 @@ No se requiere interacción táctil. La experiencia se basa completamente en nav
 Elementos visibles:
 
 1. **Barra superior**: logo de Arteflix (izquierda), logo de Cauce (centro), botón de perfil (derecha).
-2. **Banner hero**: si no hay video seleccionado, muestra una imagen de cabecera estática (`cabecera.png`). Si hay un video seleccionado, muestra su miniatura de fondo con el título, botón "Reproducir" (rojo) y botón "Más información" (azul).
+2. **Banner hero**: si no hay video seleccionado, muestra una imagen de cabecera estática (`cabecera.png`). Si hay un video seleccionado, muestra su miniatura de fondo con el título, la descripción opcional debajo del título (cuando exista un archivo `.txt` asociado) y el botón "Reproducir" (rojo).
 3. **Carruseles de categorías**: filas horizontales con tarjetas de video. Cada fila tiene gradientes en los bordes que aparecen/desaparecen según la posición del scroll.
 4. **Panel de perfil**: al hacer foco en el botón de perfil y presionar Enter, se despliega un panel con información del espacio cultural. Se cierra con Back o Enter nuevamente.
 
@@ -188,6 +200,7 @@ Inicio App
       → por cada carpeta:
           _listVideosInFolder()      (GET /files?q=...video)
           _resolveThumbnail()        (GET /files?q=...jpg|png  o  GET /files/{id}?fields=thumbnailLink)
+          _resolveDescription()      (GET /files?q=...txt  o  GET /files/{id}?alt=media)
     → setState() con categorías
   → Usuario navega y selecciona video
     → PlayerScreen(video)
@@ -212,7 +225,7 @@ No hay actualización automática periódica. Para refrescar el catálogo, se de
 
 - **Fondo**: negro (#000000).
 - **Acento principal**: rojo Netflix (#E50914).
-- **Acento secundario**: azul (#1976D2) para botón "Más información".
+- **Texto secundario**: blanco con opacidad reducida (aproximadamente 70%) para descripciones e información de menor jerarquía.
 - **Texto**: blanco y variantes de blanco semitransparente.
 - **Material 3** habilitado.
 - **Logo Arteflix**: asset `assets/logo.png`.
@@ -253,6 +266,7 @@ El personal administrador únicamente debe:
 1. Crear carpetas en Google Drive para nuevas categorías.
 2. Subir videos `.mp4`.
 3. Subir imágenes `.jpg`/`.png` opcionales con el mismo nombre del video.
+4. Subir archivos `.txt` opcionales con el mismo nombre del video para mostrar una descripción.
 
 No requiere modificar archivos JSON, configuraciones técnicas ni código fuente.
 

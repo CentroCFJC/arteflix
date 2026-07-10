@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import '../config/constants.dart';
 import '../models/category.dart';
@@ -79,6 +80,7 @@ class GoogleDriveService {
           if (!fileName.endsWith('.mp4')) continue;
 
           final thumbnailUrl = await _resolveThumbnail(fileId, fileName, folder['id']!);
+          final description = await _resolveDescription(fileName, folder['id']!);
           final videoUrl = '${AppConfig.driveDownloadUrl}/$fileId?alt=media&key=${AppConfig.driveApiKey}';
 
           final metadata = f['videoMediaMetadata'] as Map<String, dynamic>?;
@@ -96,6 +98,7 @@ class GoogleDriveService {
             videoUrl: videoUrl,
             thumbnailUrl: thumbnailUrl,
             duration: duration,
+            description: description,
           ));
         }
 
@@ -143,6 +146,53 @@ class GoogleDriveService {
         }
       }
     } catch (_) {}
+
+    return null;
+  }
+
+  Future<String?> _resolveDescription(String fileName, String folderId) async {
+    final baseName = fileName.replaceAll('.mp4', '');
+    final textName = '$baseName.txt';
+    final searchUrl = '${AppConfig.driveBaseUrl}/files'
+        '?q=name=%27$textName%27'
+        '+and+%27$folderId%27+in+parents'
+        '+and+trashed=false'
+        '&key=${AppConfig.driveApiKey}'
+        '&fields=files(id)';
+
+    String? textFileId;
+    try {
+      final response = await _client.get(Uri.parse(searchUrl));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final files = data['files'] as List<dynamic>? ?? [];
+        if (files.isNotEmpty) {
+          textFileId = files[0]['id'] as String;
+        }
+      }
+    } catch (e) {
+      developer.log('Error buscando descripción para $fileName: $e');
+      return null;
+    }
+
+    if (textFileId == null) return null;
+
+    final downloadUrl = '${AppConfig.driveDownloadUrl}/$textFileId?alt=media&key=${AppConfig.driveApiKey}';
+    try {
+      final response = await _client.get(Uri.parse(downloadUrl));
+      if (response.statusCode == 200) {
+        var text = utf8.decode(response.bodyBytes).trim();
+        if (text.startsWith('\uFEFF')) {
+          text = text.substring(1);
+        }
+        text = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+        return text.isEmpty ? null : text;
+      }
+    } on FormatException catch (e) {
+      developer.log('Error de codificación UTF-8 en descripción de $fileName: $e');
+    } catch (e) {
+      developer.log('Error leyendo descripción para $fileName: $e');
+    }
 
     return null;
   }
