@@ -73,7 +73,7 @@ class _CategoryRowState extends State<CategoryRow> {
             widget.category.name,
             style: TextStyle(
               color: Colors.white,
-              fontSize: sh * 0.026,
+              fontSize: sh * 0.035,
               fontWeight: FontWeight.bold,
             ),
           ),

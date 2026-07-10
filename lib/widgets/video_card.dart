@@ -82,7 +82,7 @@ class _VideoCardState extends State<VideoCard> with SingleTickerProviderStateMix
       height: effectiveHeight,
       margin: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(14),
         border: widget.isFocused
             ? Border.all(color: Colors.white, width: 3)
             : Border.all(color: Colors.transparent, width: 3),
@@ -95,7 +95,7 @@ class _VideoCardState extends State<VideoCard> with SingleTickerProviderStateMix
             : [],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(12),
         child: Stack(
           fit: StackFit.expand,
           children: [

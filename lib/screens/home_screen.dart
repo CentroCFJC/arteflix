@@ -249,21 +249,22 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTopBar() {
     final sh = MediaQuery.of(context).size.height;
     return Padding(
-      padding: const EdgeInsets.only(left: 48, right: 48),
+      padding: const EdgeInsets.only(left: 16, right: 48),
       child: Row(
         children: [
           Image.asset(
             'assets/logo.png',
             height: sh * 0.09,
             fit: BoxFit.contain,
+            alignment: Alignment.centerLeft,
           ),
           const Spacer(),
           Image.network(
             'https://res.cloudinary.com/dqgd5r847/image/upload/v1781198321/logo_cauce_blanco_completo_kgcj3s.png',
-            height: sh * 0.06,
+            height: sh * 0.075,
             fit: BoxFit.contain,
           ),
-          const SizedBox(width: 24),
+          const SizedBox(width: 12),
           _ProfileButton(
             expanded: _showProfilePanel,
             focusNode: _profileFocus,
@@ -350,7 +351,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final sh = MediaQuery.of(context).size.height;
     return Container(
       width: double.infinity,
-      height: sh * 0.38,
+      height: sh * 0.48,
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: AssetImage('assets/cabecera.png'),
@@ -364,7 +365,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final sh = MediaQuery.of(context).size.height;
     final video = _selectedVideo!;
     return SizedBox(
-      height: sh * 0.38,
+      height: sh * 0.48,
       child: Stack(
         children: [
           _buildHeroVideoBackground(video, sh),
@@ -438,7 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return CachedNetworkImage(
         imageUrl: thumb,
         width: double.infinity,
-      height: sh * 0.38,
+      height: sh * 0.48,
         fit: BoxFit.cover,
         errorWidget: (_, __, ___) => _buildHeroFallback(),
       );
@@ -450,7 +451,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final sh = MediaQuery.of(context).size.height;
     return Container(
       width: double.infinity,
-      height: sh * 0.38,
+      height: sh * 0.48,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF1A1A1A), Colors.black],
@@ -535,31 +536,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     Padding(
                       padding: EdgeInsets.fromLTRB(24, 12, 24, 0),
                       child: const Text(
-                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-                        'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. '
-                        'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris '
-                        'nisi ut aliquip ex ea commodo consequat.',
+                        'Artes para la Paz es una apuesta por transformar vidas a través del arte, '
+                        'la cultura y los saberes. Es el programa de educación y formación artística '
+                        'más grande y ambicioso en la historia del país, liderado por el Ministerio '
+                        'de las Culturas, las Artes y los Saberes.',
                         style: TextStyle(color: Colors.white70, fontSize: 16, height: 1.6),
                       ),
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
                       child: const Text(
-                        'Duis aute irure dolor in reprehenderit in voluptate velit esse '
-                        'cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat '
-                        'cupidatat non proident, sunt in culpa qui officia deserunt mollit '
-                        'anim id est laborum.',
+                        'Entre 2023 y 2026 se ofertaron más de 1.349.469 cupos que permitieron '
+                        'que niñas, niños, jóvenes y adolescentes han encontrado en Artes para '
+                        'la Paz un espacio para aprender, crear, expresarse, y construir '
+                        'esperanza desde el arte.',
                         style: TextStyle(color: Colors.white70, fontSize: 16, height: 1.6),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
-                      child: const Text(
-                        'Sed ut perspiciatis unde omnis iste natus error sit voluptatem '
-                        'accusantium doloremque laudantium, totam rem aperiam, eaque ipsa '
-                        'quae ab illo inventore veritatis et quasi architecto beatae vitae '
-                        'dicta sunt explicabo.',
-                        style: TextStyle(color: Colors.white54, fontSize: 15, height: 1.6),
                       ),
                     ),
                     const SizedBox(height: 20),

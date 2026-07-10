@@ -24,6 +24,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   static const int _maxRetries = 3;
   static const Duration _controlsAutoHide = Duration(seconds: 5);
   Timer? _hideControlsTimer;
+  bool _hasPopped = false;
 
   void _showControlsWithTimer() {
     _hideControlsTimer?.cancel();
@@ -84,9 +85,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
     setState(() {});
     if (c.value.isInitialized &&
         c.value.position == c.value.duration &&
-        !c.value.isPlaying) {
+        !c.value.isPlaying &&
+        !_hasPopped) {
+      _hasPopped = true;
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) Navigator.pop(context);
+        if (mounted && Navigator.canPop(context)) Navigator.pop(context);
       });
     }
   }
@@ -136,7 +139,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
     }
 
     if (event.logicalKey == LogicalKeyboardKey.mediaStop) {
-      Navigator.pop(context);
+      if (!_hasPopped && Navigator.canPop(context)) {
+        _hasPopped = true;
+        Navigator.pop(context);
+      }
       return KeyEventResult.handled;
     }
 
@@ -146,12 +152,21 @@ class _PlayerScreenState extends State<PlayerScreen> {
   @override
   Widget build(BuildContext context) {
     if (Platform.isAndroid) {
-      return Scaffold(
-        backgroundColor: Colors.black,
-        body: Focus(
-          autofocus: true,
-          onKeyEvent: _handleKeyEvent,
-          child: _initialized ? _buildPlayer() : _buildLoading(),
+      return PopScope(
+        canPop: !_hasPopped,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) {
+            _hasPopped = true;
+            Navigator.pop(context);
+          }
+        },
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: Focus(
+            autofocus: true,
+            onKeyEvent: _handleKeyEvent,
+            child: _initialized ? _buildPlayer() : _buildLoading(),
+          ),
         ),
       );
     }
