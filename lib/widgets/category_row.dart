@@ -11,6 +11,7 @@ class CategoryRow extends StatefulWidget {
   final List<FocusNode>? videoFocusNodes;
   final List<VoidCallback?>? upCallbacks;
   final List<VoidCallback?>? downCallbacks;
+  final VoidCallback? onGridNavigated;
   final ScrollController? scrollController;
 
   const CategoryRow({
@@ -21,6 +22,7 @@ class CategoryRow extends StatefulWidget {
     this.videoFocusNodes,
     this.upCallbacks,
     this.downCallbacks,
+    this.onGridNavigated,
     this.scrollController,
   });
 
@@ -95,6 +97,7 @@ class _CategoryRowState extends State<CategoryRow> {
                   if (index > 0 && widget.videoFocusNodes != null && index < widget.videoFocusNodes!.length) {
                     final prevNode = widget.videoFocusNodes![index - 1];
                     onLeft = () {
+                      widget.onGridNavigated?.call();
                       prevNode.requestFocus();
                     };
                   }
@@ -103,6 +106,7 @@ class _CategoryRowState extends State<CategoryRow> {
                   if (index < widget.category.videos.length - 1 && widget.videoFocusNodes != null && index + 1 < widget.videoFocusNodes!.length) {
                     final nextNode = widget.videoFocusNodes![index + 1];
                     onRight = () {
+                      widget.onGridNavigated?.call();
                       nextNode.requestFocus();
                     };
                   }

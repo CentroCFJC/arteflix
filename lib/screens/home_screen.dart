@@ -28,6 +28,10 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _error;
   bool _showProfilePanel = false;
   VideoItem? _selectedVideo;
+  bool _hasNavigated = false;
+  bool _gridHasFocus = false;
+  int? _lastSelectedCategory;
+  int? _lastSelectedIndex;
 
   @override
   void initState() {
@@ -46,6 +50,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       setState(() {
         _categories = categories;
+        _lastSelectedCategory = null;
+        _lastSelectedIndex = null;
         _categoryKeys
           ..clear()
           ..addAll(categories.map((_) => GlobalKey()));
@@ -54,6 +60,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ).toList();
         _hScrollControllers = categories.map((_) => ScrollController()).toList();
         _loading = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        for (final row in _videoFocusGrid) {
+          for (final node in row) {
+            node.addListener(_onGridFocusChanged);
+          }
+        }
       });
     } catch (e) {
       if (!mounted) return;
@@ -65,8 +79,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _selectVideo(VideoItem video) {
-    setState(() => _selectedVideo = video);
+    setState(() {
+      _selectedVideo = video;
+      _gridHasFocus = false;
+    });
     Future.microtask(() => _playButtonFocus.requestFocus());
+  }
+
+  bool get _isHeroVisible {
+    if (_selectedVideo != null) return !_gridHasFocus;
+    return !_hasNavigated;
+  }
+
+  void _onFirstNavigation() {
+    if (!_hasNavigated) setState(() => _hasNavigated = true);
+  }
+
+  void _onGridFocusChanged() {
+    if (!mounted) return;
+    final anyFocused = _videoFocusGrid.any((row) => row.any((node) => node.hasFocus));
+    if (anyFocused != _gridHasFocus) {
+      setState(() => _gridHasFocus = anyFocused);
+    }
   }
 
   void _playVideo(VideoItem video) {
@@ -84,6 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _verticalScrollController.dispose();
     for (final row in _videoFocusGrid) {
       for (final node in row) {
+        node.removeListener(_onGridFocusChanged);
         node.dispose();
       }
     }
@@ -147,64 +182,101 @@ class _HomeScreenState extends State<HomeScreen> {
         Positioned.fill(
           child: Column(
             children: [
-              _buildHeroBanner(),
+              AnimatedOpacity(
+                opacity: _isHeroVisible ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  height: _isHeroVisible ? MediaQuery.of(context).size.height * 0.48 : 0.0,
+                  child: ClipRect(
+                    child: AnimatedSlide(
+                      offset: _isHeroVisible ? Offset.zero : const Offset(0, -1),
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      child: _buildHeroBanner(),
+                    ),
+                  ),
+                ),
+              ),
               Expanded(
-                child: SingleChildScrollView(
-                  controller: _verticalScrollController,
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Column(
-                    children: _categories.asMap().entries.map((e) {
-                      final catIndex = e.key;
-                      final rowNodes = _videoFocusGrid.length > catIndex
-                          ? _videoFocusGrid[catIndex]
-                          : <FocusNode>[];
-                      final isLast = catIndex == _categories.length - 1;
+                child: AnimatedPadding(
+                  padding: EdgeInsets.only(
+                    top: _isHeroVisible
+                        ? 0.0
+                        : 40.0 + MediaQuery.of(context).size.height * 0.09,
+                  ),
+                  duration: const Duration(milliseconds: 300),
+                  child: SingleChildScrollView(
+                    controller: _verticalScrollController,
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Column(
+                      children: _categories.asMap().entries.map((e) {
+                        final catIndex = e.key;
+                        final rowNodes = _videoFocusGrid.length > catIndex
+                            ? _videoFocusGrid[catIndex]
+                            : <FocusNode>[];
+                        final isLast = catIndex == _categories.length - 1;
 
-                      final prevNodes = catIndex > 0 ? _videoFocusGrid[catIndex - 1] : null;
-                      final nextNodes = !isLast && _videoFocusGrid.length > catIndex + 1
-                          ? _videoFocusGrid[catIndex + 1]
-                          : null;
+                        final prevNodes = catIndex > 0 ? _videoFocusGrid[catIndex - 1] : null;
+                        final nextNodes = !isLast && _videoFocusGrid.length > catIndex + 1
+                            ? _videoFocusGrid[catIndex + 1]
+                            : null;
 
-                      final List<VoidCallback?> upCbs;
-                      if (catIndex == 0) {
-                        final upNode = _selectedVideo != null ? _playButtonFocus : _profileFocus;
-                        upCbs = rowNodes.map((_) => () => upNode.requestFocus()).toList();
-                      } else if (prevNodes != null && prevNodes.isNotEmpty) {
-                        final targetNode = prevNodes[0];
-                        final targetCtrl = _hScrollControllers[catIndex - 1];
-                        upCbs = rowNodes.map((_) => () {
-                          if (targetCtrl.hasClients) targetCtrl.jumpTo(0);
-                          targetNode.requestFocus();
-                          _scrollIntoView(targetNode);
-                        }).toList();
-                      } else {
-                        upCbs = rowNodes.map((_) => null).toList();
-                      }
+                        final List<VoidCallback?> upCbs;
+                        if (catIndex == 0) {
+                          final upNode = _selectedVideo != null ? _playButtonFocus : _profileFocus;
+                          upCbs = rowNodes.map((_) => () {
+                            _onFirstNavigation();
+                            upNode.requestFocus();
+                          }).toList();
+                        } else if (prevNodes != null && prevNodes.isNotEmpty) {
+                          final targetNode = prevNodes[0];
+                          final targetCtrl = _hScrollControllers[catIndex - 1];
+                          upCbs = rowNodes.map((_) => () {
+                            _onFirstNavigation();
+                            if (targetCtrl.hasClients) targetCtrl.jumpTo(0);
+                            targetNode.requestFocus();
+                            _scrollIntoView(targetNode);
+                          }).toList();
+                        } else {
+                          upCbs = rowNodes.map((_) => null).toList();
+                        }
 
-                      final List<VoidCallback?> downCbs;
-                      if (nextNodes != null && nextNodes.isNotEmpty) {
-                        final targetNode = nextNodes[0];
-                        final targetCtrl = _hScrollControllers[catIndex + 1];
-                        downCbs = rowNodes.map((_) => () {
-                          if (targetCtrl.hasClients) targetCtrl.jumpTo(0);
-                          targetNode.requestFocus();
-                          _scrollIntoView(targetNode);
-                        }).toList();
-                      } else {
-                        downCbs = rowNodes.map((_) => null).toList();
-                      }
+                        final List<VoidCallback?> downCbs;
+                        if (nextNodes != null && nextNodes.isNotEmpty) {
+                          final targetNode = nextNodes[0];
+                          final targetCtrl = _hScrollControllers[catIndex + 1];
+                          downCbs = rowNodes.map((_) => () {
+                            _onFirstNavigation();
+                            if (targetCtrl.hasClients) targetCtrl.jumpTo(0);
+                            targetNode.requestFocus();
+                            _scrollIntoView(targetNode);
+                          }).toList();
+                        } else {
+                          downCbs = rowNodes.map((_) => null).toList();
+                        }
 
-                      return CategoryRow(
-                        key: _categoryKeys[catIndex],
-                        category: e.value,
-                        onVideoSelected: _selectVideo,
-                        initialFocus: catIndex == 0,
-                        videoFocusNodes: rowNodes,
-                        upCallbacks: upCbs,
-                        downCallbacks: downCbs,
-                        scrollController: _hScrollControllers[catIndex],
-                      );
-                    }).toList(),
+                        return CategoryRow(
+                          key: _categoryKeys[catIndex],
+                          category: e.value,
+                          onVideoSelected: (video) {
+                            final idx = _categories[catIndex].videos.indexOf(video);
+                            if (idx >= 0) {
+                              _lastSelectedCategory = catIndex;
+                              _lastSelectedIndex = idx;
+                            }
+                            _selectVideo(video);
+                          },
+                          initialFocus: catIndex == 0,
+                          videoFocusNodes: rowNodes,
+                          upCallbacks: upCbs,
+                          downCallbacks: downCbs,
+                          onGridNavigated: _onFirstNavigation,
+                          scrollController: _hScrollControllers[catIndex],
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
               ),
@@ -268,6 +340,7 @@ class _HomeScreenState extends State<HomeScreen> {
             focusNode: _profileFocus,
             onPressed: () => setState(() => _showProfilePanel = !_showProfilePanel),
             onDownPressed: () {
+              setState(() => _hasNavigated = true);
               if (_selectedVideo != null) {
                 _playButtonFocus.requestFocus();
               } else if (_videoFocusGrid.isNotEmpty && _videoFocusGrid[0].isNotEmpty) {
@@ -301,12 +374,25 @@ class _HomeScreenState extends State<HomeScreen> {
             return KeyEventResult.handled;
           }
           if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.arrowDown) {
-            if (_videoFocusGrid.isNotEmpty && _videoFocusGrid[0].isNotEmpty) {
-              if (_hScrollControllers.isNotEmpty) {
-                _hScrollControllers[0].jumpTo(0);
+            setState(() => _hasNavigated = true);
+            if (_videoFocusGrid.isNotEmpty) {
+              if (_lastSelectedCategory != null && _lastSelectedIndex != null &&
+                  _lastSelectedCategory! < _videoFocusGrid.length &&
+                  _lastSelectedIndex! < _videoFocusGrid[_lastSelectedCategory!].length) {
+                final row = _lastSelectedCategory!;
+                final col = _lastSelectedIndex!;
+                if (row < _hScrollControllers.length) {
+                  _hScrollControllers[row].jumpTo(0);
+                }
+                _videoFocusGrid[row][col].requestFocus();
+                _scrollIntoView(_videoFocusGrid[row][col]);
+              } else if (_videoFocusGrid[0].isNotEmpty) {
+                if (_hScrollControllers.isNotEmpty) {
+                  _hScrollControllers[0].jumpTo(0);
+                }
+                _videoFocusGrid[0][0].requestFocus();
+                _scrollIntoView(_videoFocusGrid[0][0]);
               }
-              _videoFocusGrid[0][0].requestFocus();
-              _scrollIntoView(_videoFocusGrid[0][0]);
             }
             return KeyEventResult.handled;
           }
