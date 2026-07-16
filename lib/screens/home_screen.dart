@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -32,11 +33,15 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _gridHasFocus = false;
   int? _lastSelectedCategory;
   int? _lastSelectedIndex;
+  Timer? _inactivityTimer;
+  static const _inactivityDuration = Duration(minutes: 2);
 
   @override
   void initState() {
     super.initState();
     _loadCatalog();
+    HardwareKeyboard.instance.addHandler(_onGlobalKeyEvent);
+    _resetInactivityTimer();
   }
 
   Future<void> _loadCatalog() async {
@@ -103,6 +108,25 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _resetInactivityTimer() {
+    _inactivityTimer?.cancel();
+    _inactivityTimer = Timer(_inactivityDuration, _onInactivityTimeout);
+  }
+
+  void _onInactivityTimeout() {
+    if (!mounted) return;
+    setState(() {
+      _hasNavigated = false;
+      _selectedVideo = null;
+      _showProfilePanel = false;
+    });
+  }
+
+  bool _onGlobalKeyEvent(KeyEvent event) {
+    _resetInactivityTimer();
+    return false;
+  }
+
   void _playVideo(VideoItem video) {
     Navigator.push(
       context,
@@ -112,6 +136,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _inactivityTimer?.cancel();
+    HardwareKeyboard.instance.removeHandler(_onGlobalKeyEvent);
     _heroFocus.dispose();
     _profileFocus.dispose();
     _playButtonFocus.dispose();
@@ -140,7 +166,10 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       child: Scaffold(
         backgroundColor: Colors.black,
-        body: _buildBody(),
+        body: Listener(
+          onPointerDown: (_) => _resetInactivityTimer(),
+          child: _buildBody(),
+        ),
       ),
     );
   }
@@ -782,6 +811,9 @@ class _ProfileButtonState extends State<_ProfileButton> {
           return KeyEventResult.handled;
         }
         if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            return KeyEventResult.handled;
+          }
           if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
             widget.onDownPressed?.call();
             return KeyEventResult.handled;
