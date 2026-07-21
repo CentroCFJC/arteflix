@@ -57,11 +57,6 @@ public final class TextureVideoPlayer extends VideoPlayer implements SurfaceProd
 
         for (MediaCodecInfo info : allDecoders) {
           String name = info.name;
-          // Exclude the known-broken Amlogic decoder
-          if (name.contains("OMX.amlogic.avc.decoder.awesome")) {
-            Log.w(TAG, "Excluding problematic decoder: " + name);
-            continue;
-          }
           // Separate software decoders for fallback ordering
           if (name.startsWith("OMX.google.") || name.startsWith("c2.android.")) {
             softwareDecoders.add(info);

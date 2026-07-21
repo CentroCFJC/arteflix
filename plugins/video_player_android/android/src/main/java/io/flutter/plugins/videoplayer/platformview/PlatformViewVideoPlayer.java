@@ -49,10 +49,6 @@ public class PlatformViewVideoPlayer extends VideoPlayer {
 
         for (MediaCodecInfo info : allDecoders) {
           String name = info.name;
-          if (name.contains("OMX.amlogic.avc.decoder.awesome")) {
-            Log.w(TAG, "Excluding problematic decoder: " + name);
-            continue;
-          }
           if (name.startsWith("OMX.google.") || name.startsWith("c2.android.")) {
             softwareDecoders.add(info);
           } else {
@@ -104,7 +100,6 @@ public class PlatformViewVideoPlayer extends VideoPlayer {
                 protected MediaCodecAdapter.Factory getCodecAdapterFactory() {
                   DefaultMediaCodecAdapterFactory factory =
                       new DefaultMediaCodecAdapterFactory();
-                  factory.forceDisableAsynchronous();
                   return factory;
                 }
               };
